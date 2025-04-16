@@ -1,5 +1,5 @@
-name: component-a
-title: Component A
+name: beep-adr
+title: Beep Architecture Decision Records
 version: 1.5.6
 start_page: inline-text-formatting.adoc
 asciidoc:
@@ -8,3 +8,4 @@ asciidoc:
     table-caption: false
 nav:
 - modules/ROOT/nav.adoc
+
