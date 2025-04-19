@@ -1,0 +1,79 @@
+== I. Separating Beep into functional neighborhoods and microservices
+
+=== 3. Separating Beep's user stories into functional neighborhoods, contexts and services
+
+In this section, we will classify the user stories we identified into functional neighborhoods, and I will give my proposal for breaking down Beep into microservices.
+
+==== Identifying functional neighborhoods and bounded contexts
+
+A functional neighborhood is a group of functionalities that are related to a specific business capability of Beep.
+// Is it a bit late to define this term? Or is it good here? Follow where each term is defined. Also add them to the glossary? If we assume the reader doesn't know these terms? See how it's done in academics. Who would read this?
+// This definition is worth nothing if "business capability" isn't defined earlier.
+
+Some common pitfalls to avoid when defining functional neighborhoods and cutting microservices are:
+
+- Defining functional neighborhoods based on the current architecture, rather than the business capabilities of Beep,
+- Defining functional neighborhoods that are too tightly coupled,
+- Identifying microservices from the database schema, which is an anti-pattern so common it has a name: "Entity-Service Anti-Pattern". This results in distributed monoliths where each service becomes a CRUD wrapper around a table, leading to excessive coupling and communication between services, causing performance issues.
+
+Generally, this comes down to not following the microservices architecture as we defined it earlier.
+
+In order to avoid those pitfalls and more correctly identify which microservices should make up Beep's architecture in a way that fulfills all of the user stories and business capabilities of Beep, we have to examine the current architecture, database schema, levels of dependency between components of the current monolith, and more. This will allow us to consider, and better avoid past architectural truths while designing the new architecture, which is to be based on services revolving around business capabilities. In order to do that, we will apply some principles of Domain-Driven Development, such as identifying bounded contexts.
+
+// Idea: presenting a view of the current database schema before this section could help identify tight couplings, and thus help group stuff(?) into services? Maybe? Explore this possibility.
+
+//TODO: review DDD to see where this part (right below) needs rethinking. Also define DDD somewhere. Glossary+linkreference to it.
+
+We may start by identifying the main domains Beep revolves around.
+
+- Authentication of users and user management
+- Real-time communication and instant messaging and file sharing
+- Management and retrieval of large quantities of files and other stored media
+
+This first repartition of domains us a basic idea of what domains Beep's business capabilities, and the user stories they resolve, mainly revolve around. However, we need to break down and regroup these domains further, avoiding tight levels of coupling between them and their components. +
+Some parts of Beep are clearly more independent than others. These can already be set astide into their own "contexts", such as the authentication system, the real-time communication system, instant messaging system, media storage system, search system (which would search accross for resources across other systems), and the notification system (which would notify users' devices on events happening from other systems). +
+
+These couplings are starting to make more sense. There are features in Beep that we didn't mention yet, such as server lifecycle management: settings, invitations; as well as roles and permissions. +
+The lifecycle of servers in Beep is currently pretty simple, but that means it's bound to have many features added soon. That means it's important to future-proof this system as of now, by thinking about the possible user stories and business capabilities that could revolve around it in the future. +
+Currently, server lifecycle includes servers settings (names, etc.) as well as invitation links. But in the future, this could include communities, groupings of servers, academic communities available for students via their academic emails - for example. +
+Entirely future-proofing a system is not an easy task, and would require a document of its own. However, some basic principles can be applied to make most of the future-proofing have effect. Building a smart and common abstraction over the current models, and avoiding repetition are such core principles. +
+
+As such, all of this could be considered to constitute its own "server lifecycle management" context.
+
+And while we're structuring our services, let's keep in mind the common pitfalls we may involuntarily fall into. Especially the "Entity-Service Anti-Pattern", defined above.
+
+We have identifies contexts around which to define Beep's future microservices architecture. To further refine these contexts, we can draw a "context map" to clearly identify the contexts around which services should be grouped.
+
+//Review DDD's bounded contexts around here.
+
+//We will apply principles of DDD (such as bounded contexts) and ... to... avoid...
+//TODO: draw a "context map"!! To clearly identify the contexts around which services should be grouped.
+https://medium.com/@mike_7149/context-mapping-4b4909cf195a
+Context map draft
+
+- Authentication context (authenticating any request, external (users, bots/webhooks) or maybe even internal (authenticate services) (that's hypothetical for now)
+- Authorization context (Manage RBAC, ABAC and PBAC. Apply policies between/across services to users queries/requests, etc.)
+- Chatting context (messages, files, "text" channels lifecycle management)
+- Video/audio calls context (handles all the media, real-time audio/video/screen sharing logic/features, and "voice" channels lifecycle management)
+- Notifications context (push notifications to devices. At least that would need a message queuing...)
+- User context (users and their settings)
+- Search context (search for servers (overview page), channels, users, messages, files... Anything)
+- Communities/servers context (manage communities/servers lifecycle, crud, invitations/... Potential future features such as groupings of servers as communities/...)
+
+-> Check how do these contexts organize around teams, features, and how they'd interact with each other ; to make sure it's correct.
+
+// /!\ https://medium.com/@vladikk.com/bounded-contexts-are-not-microservices-ead44b8d6e35 Bounded context != microservice.. Be CAUTIOUS! Review DD and rethink what you're doing? Define a basic ubiquitous language for Beep? In the component diagram(), for the interfaces?) maybe?
+
+In earlier sections, we identified the user stories and functionalities beep must provide. We then classified them into bounded contexts following domain-driven development principles. From these previous analyses, I will propose a separation of Beep into microservices.
+
+Should authorization be implemented as a separate service? Or sidecar proxy component? Central or distributed policy store? Or etc. Will be seen in chapter IV.
+
+If we take future features into account, we would add a "search" service, taking care of the search for users, messages, files and other elements across storage systems.
+
+We can be tempted to separate Beep into microservices following the current SQL database's schema and relations, that we saw in the initial chapter. But this would be a mistake, since as we defined in the initial chapter, microservices should be organized around business capabilities; and the current database schema is not a faithful representation of Beep's business capabilities, as opposed to the user stories, business capabilities and functionalities their represent, that we identified in the earlier sections. +
+If we had defined Beep's microservices architecture from its initial database schema, we would end up with a distributed monolithic architecture, with tightly coupled services, a lot of inter-service communication, and thus scalability, and other benefits of a microservices architecture would be impacted.
+
+Also doesn't make sense since databases will be separated into their own services and can be designed completely independently of the rest of the system. They become not part of the business capabilities of Beep, but really just tools to store and retrieve data/state for each service.
+
+Also also, how can we have a notification service... Without a message queuing system?? We'd have to use some other way like... Mongodb... To manage the push notifs state... Ugh. It's just a hacky hack, compared to a message queue. Or we'd assume that every device in the world who runs Beep is always on and has a stable connection to Beep (so that there would be no state to manage).
+OH I KNOW!! We get rid of mobile push notifications (so no need for kafka, or third parties), and for the browser, we use a websocket. I suppose it would work for browser notifications into desktop notifications.. Maybe??
