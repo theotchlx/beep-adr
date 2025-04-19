@@ -1,0 +1,12 @@
+= Logging
+
+12-factor app https://12factor.net/logs
+
+-> Chaque svc ne se préoccupe pas de gérer ses logs, dans un endpoint, un fichier...
+-> Les écrit sur stdout. C'est le système environnant qui gère en récupérant les logs avec un "log router" agent, such as fluentd.
+
+https://www.fluentd.org/blog/unified-logging-layer (2014, mais prouvé vrai maintenant)
+
+ne supporte pas golang, ni rust.
+
+-> Utiliser OpenTelemetry. Solution maintenue CNCF et à jour
