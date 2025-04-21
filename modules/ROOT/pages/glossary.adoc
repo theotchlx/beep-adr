@@ -1,0 +1,12 @@
+== Glossary
+
+In alphabetical order.
+
+"The purpose of a glossary is to provide definitions for words or phrases that may be unfamiliar to the reader, or that have a specialized or technical meaning within the context of the document."
+
+//TODO: fill glossary with relevant terms and definitions.
+
+- **Use case**: A scenario for a critical user journey / etc. business etc. WIP.
+
+- **Business capability**: A business capability is a capacity a business or organization has to perform core functions, fulfill its objectives and responsibilities in a particular domain.
+

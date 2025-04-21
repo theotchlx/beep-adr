@@ -77,3 +77,134 @@ Also doesn't make sense since databases will be separated into their own service
 
 Also also, how can we have a notification service... Without a message queuing system?? We'd have to use some other way like... Mongodb... To manage the push notifs state... Ugh. It's just a hacky hack, compared to a message queue. Or we'd assume that every device in the world who runs Beep is always on and has a stable connection to Beep (so that there would be no state to manage).
 OH I KNOW!! We get rid of mobile push notifications (so no need for kafka, or third parties), and for the browser, we use a websocket. I suppose it would work for browser notifications into desktop notifications.. Maybe??
+
+==== Component diagram for Beep's separation into microservices
+
+These functional neighborhoods/business capabilities/... can be formally represented using a UML component diagram. Below is the resulting UML component diagram describing my proposal for Beep's separation into microservices.
+
+.Component diagram for Beep's separation into microservices. Made with draw.io
+image::images/fig3.component/beep-uml-component-diagram-light.svg[Component diagram showing Beep's architecture separat
+ed into microservices.]
+
+//TODO: refaire un second diagramme de composants avec des blocs au lieu des services et dedans deux composants : l'applicatif et la bdd associée.
+
+====
+**WIP**
+
+> "Deciding what capability to decouple when and how to migrate incrementally are some of the architectural challenges of decomposing a monolith to an ecosystem of microservices."
+
+Methods to break down the monolith:
+
+Decompose services by business capabilities : reflect organization behavior. -> component diagram. +
+En partant du domaine (communications temps réel), on va créer les différents services. Attention aux services qui communiquent beaucoup entre eux : **combiner les services**. +
+https://12factor.net/ +
+"The philosophy of Twelve-Factor turned out to be surprisingly timeless. More than a decade later, people still find its insights valuable, and it's often cited as a solid set of best practices for application development. But while the concepts remain relevant, many of the details have started to show their age." +
+Domain-Driven Development. Application est construite sous forme d'abstractions au dessus de notre modèle.
+
+Obstacles à la décomposition : network latency, data inconsistency/interfaces, god classes (fait tout, dure à décomposer, big) and reduced availability. Énormément de contextes sont impactés.
+
+Architecture bien définie avec le DDD, bounded contexts. Architecture (enables org & proc), organization (enables proc) et process de développement => rapid, frequent & reliable delivery of software. +
+**1 service = 1 responsabilité. Un service rendu. N'est responsable que d'une chose à faire.** +
+Guidelines : +
+Dur à faire mais génial : signifie une bonne séparation des services : c'est le **Common Closure Pattern**. +
+En gros, une règle business n'affecte que 1 microservice, pas deux ou plus (si cette règle évolue il faudrait modifier plusieurs services...) +
+Disons que j'ai à modifier le mode de livraison : que ça ne soit fait que dans un seul service !!! +
+**Open Closed Princple** : on veut pouvoir intégrer facilement d'autres contrats d'API sans avoir à changer le coeur de fonctionnalités !!! -> Réelle abstraction. Logique non liée aux contrats d'APIs. => Des interfaces/contrats d'API génériques (comme un filesystem : create, read, update, delete, open d'un objet générique (fichier) ET NON PAS un type de fichier spécifique. C'est toujours que des fichiers ultra génériques avec leurs mêmes attributs communs : nom, taille, permissions, etc.) +
+Quality of a service: scalable, reliable, secure, maintainable, testable, etc. +
+=> Implementable functionalities are dependent on the quality of the architecture design. Future-proof design, stays easy to update with features, good abstractions (see how good filesystems are :3) +
+Liskov principle, ouvert en extension fermé en modification (en gros les bonnes abstractions type filesystem) +
+Je veux utiliser une autre bdd. Ou en utiliser plusieurs. Service and repository pattern. Hexagonal architecture. Des adaptateurs (que l'on branche sur un port) qui permettent de réaliser des opérations qui soient indépendantes de ce qu'il y a derrière (mongodb, postgres, filesystem...!! C'est dans l'adaptateur qu'on définit ça) +
+
+https://www.uml-diagrams.org/component-diagrams.html
+https://developer.ibm.com/articles/the-component-diagram/
+====
+
+Reading a component diagram: components are strictly logical, design-time constructs. The idea is that you can easily reuse and/or substitute a different component implementation in your designs because a component encapsulates behavior and implements specified interfaces.
+
+This diagram is a first draft of the separation of Beep into microservices. This draft will be refined and completed further in the following sections, where we will take into account multiple other issues such as authentication, authorization, observability and many more.
+
+(Authentication and) authorization (centralized, or decentralized store/policy agent? will depend on tech used. See corresponding chapter) services do not appear in this diagram will be defined in later chapters.
+
+This component diagram only illustrates components and their interactions. It is not a proposal for inter-services communication, which will be studied in the next chapter.
+
+Also there isn't the frontend, surrounding load balancer and API gateway, which allows the frontend to reach API endpoints that lead to different services, and authenticate the requests via JWT.
+
+// TODO: maybe consider the database-per-service pattern here, and in the diagram (representing them).
+
+=== 4. How Beep can be migrated to a microservices architecture: breaking down the monolith
+
+Earlier, we saw an overview of Beep's current architecture, of the microservices architecture, and why Beep should consider migrating to a microservices architecture. +
+In the last section, we went over my proposal to separate Beep into functional neighborhoods and microservices. +
+In this section, we will briefly go over how the Beep team can break down the application into microservices.
+
+In this section, we consider that the earlier chapters have been read and understood by the team, including the microservices architecture, as well as the separation of Beep into bounded contexts.
+
+There are two main ways the Beep team could break down the monolith:
+
+- The incremental way,
+- Or a complete redesign and reimplementation.
+
+A complete redesign and reimplementation may seem like a sound idea at first, but when studied with a critical eye on resources management and common operational principles, it becomes obvious that this choice is soldem the right one. +
+
+Limits in resources such as time, effort or hands would need to be much more than sufficient to entirely replace the current architecture at once. Maintenance and the rate of delivery of new features and on the current system would suffer greatly.
+
+On the contrary, incrementally redesigning and reimplementing groupings of features as new services, bounded inside their own contexts, and responsible of their own technology stack and business capabilities, would allow the Beep team to gradually replace parts of the current monolith with services, rendering the operational management of resources completely feasible across the team, with minimal impact on the current system's integrity, management, or feature delivery lifecycle.
+
+Moreover, by concentrating the efforts of some on the implementation of a new service, this approach may also be just as fast, if not faster than the former approach.
+
+
+**Sources for the chapter:**
+
+https://microservices.io/refactoring/
+https://microservices.io/patterns/
+https://microservices.io/patterns/microservices.html
+https://microservices.io/patterns/decomposition/decompose-by-business-capability.html
+https://microservices.io/patterns/data/saga.html
+https://microservices.io/post/refactoring/2019/10/09/refactoring-to-microservices.html
+https://microservices.io/post/architecture/2024/08/27/architecting-microservices-for-fast-flow.html
+
+Gérer les migrations de bdd, les insertions de bdd dans une architecture microservices ? -> Trino !! (? Piste à explorer).
+https://trino.io/blog/2020/06/16/presto-summit-zuora.html PS: Trino s'appelait PrestoSQL avant.
+https://moduscreate.com/blog/microservices-databases-migrations/
+Paraît que marche encore mieux avec les trucs datalake, Hive, Iceberg...
+
+use kafka for inter-microservices communication?
+https://www.youtube.com/watch?v=Vz2DHAHn7OU
+
+Was told this is a good tutorial to understand async await (in rust at least, but maybe in general!): https://tokio.rs/tokio/tutorial
+https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
+https://stackoverflow.com/questions/60457740/rest-endpoint-for-complex-actions
+https://stackoverflow.com/a/60463179
+
+when is microservice not a good pattern
+https://dzone.com/articles/10-microservices-anti-patterns-you-need-to-avoid
+
+- https://microservices.io/articles/glossary#dora-metrics
+- https://martinfowler.com/bliki/BoundedContext.html
+- https://martinfowler.com/articles/break-monolith-into-microservices.html
+- https://leofvo.me/articles/microservices-for-the-win
+- https://www.geeksforgeeks.org/how-discord-scaled-to-15-million-users-on-one-server/
+- https://samarthasthan.com/posts/building-a-scalable-e-commerce-empire-a-micro-services-system-design-approach/
+- https://freedium.cfd/https://medium.com/@samarthasthan/from-zero-to-millions-crafting-a-scalable-discord-with-micro-services-0e55e65f2a16
+- https://microservices.io/patterns/decomposition/decompose-by-business-capability.html
+- https://microservices.io/patterns/microservices.html
+- https://microservices.io/articles/glossary#dora-metrics
+- https://microservices.io/patterns/data/database-per-service.html
+- https://microservices.io/patterns/data/saga.html
+- https://stackoverflow.com/questions/60071074/microservices-dependencies-in-uml-diagrams
+- https://www.uml-diagrams.org/component-diagrams.html
+- https://developer.ibm.com/articles/the-component-diagram/
+- https://www.edrawsoft.com/fr/article/microservices-architecture-diagram.html
+
+====
+WIP
+
+Listen to DIS https://www.youtube.com/watch?v=rv4LlmLmVWk
+
+POUR LA BDD DE MESSAGES : MONGO!!! car relationnel déjà pour le search... Mais aussi pour quand ds le msg y'a une image/un msg vocal, ne pas avoir 90% de champs null dans la postgres pour tous les msgs qui en ont pas... Et si y'a, dans le mongo, mettre l'url du file service/object storage/CDN/FTP...
+====
+
+The purpose of this schema is to capture the requirements of Beep considering its users. This will help us outline business capabilities and user stories into functional neighborhoods, and thus redefine Beep into microservices.
+//TODO: stop the blabla between business capabilities and user stories. Time to be clear and concise, bro. Yeah.
+
+A business capability is the expression or articulation of the capacity, materials, and expertise an organization needs to perform core functions.

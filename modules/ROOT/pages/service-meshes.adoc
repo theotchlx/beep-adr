@@ -1,0 +1,6 @@
+https://www.youtube.com/watch?v=kwUgrSG_ZKI
+Ils ont fait ce site https://servicemesh.es/
+Qui permet de comparer des service mesh
+ça complète des pocs
+À noter que la vid (octobre 2021) rentre pas dans les détails, ça explique plutôt les features d'un svc mesh en général (et si c'est utile selon le contexte), donc c'est pas trop outdated il me semble... Sauf sur les chapitres après 17:00 sur les dashboards, et après sur les benchmarks
+https://www.innoq.com/en/blog/2020/07/happy-without-a-service-mesh/
