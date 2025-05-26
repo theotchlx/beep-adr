@@ -1,0 +1,4 @@
+= Overview
+:navtitle: Overview
+
+This document gathers the Architectural Decision Records (ADRs) of the Beep project.

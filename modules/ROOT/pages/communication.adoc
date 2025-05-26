@@ -1,0 +1,169 @@
+= III. Enabling communication between services
+
+The following sections concern my proposal of design and implementations for the communication between the microservices of Beep.
+
+Pour les diagrammes, reprendre la figure 3 et mettre le gRPC / interfaces RPCs(?) / repo protobuff(?).
+Puis refaire une 5e figure qui, par dessus cette figure 4, rajoute aussi l'api gateway/+/LB, le frontend devant, et derrière, les requêtes REST aux endpoints APIs offerts par chacun des services. C'est en json? P'tet.
+
+== 1. Inter-services communication in a microservices architecture
+
+Briefly present the What? and Why? of inter-services communication. This should be done as a natural introduction to the next chapter (Identifying needs and constraints).
+
+== 2. Identifying needs and constraints
+
+Talk about the needs in latency etc (see chapter I. Maybe move these to chapter 0? to be more globally referenced) and that we need a proper solution for that (so no http1.1) +
+Also talk about the fact that we'd have teams working separately and independtly => Proper API definitions. So RPCs more than an OpenAPI spec (common/shared API definitions over viewable API specifications) +
+Talk about CQRS/event-sourcing etc (their use, why they are used typically) and say that we won't use them (and why it's not considered? Find the reason?) +
+Talk/warn about the very important constraint that is that communication between microservices is something that needs to be designed well, and future proofed very well, since it's very very hard to change later (and why).
+
+=== Accounting for considerations in inter-services communication
+
+Talk about the fact that since we're not doing event-driven architecture, we need API gateway interfaces (services, if not LBs) in front of each service family, to load balance/state-aware round-robin the requests. And that if requests are lost, they'd have to be resent, they are not queued - and services don't queue to event source either.
+
+Maybe briefly talk abt tracing for the next chapters too?
+
+Needs:
+link Google auth, Polytech auth, Beep auth (and associate accounts), manage identification and authentication and them give way to authorization. And take into account the fact that, iirc, keycloak can do all three. (verify)
+
+Dedicated central repository/location for the .proto files. And service discovery (or even a service that manages only that?)
+
+== 3. Comparing available technologies
+
+List and compare technologies, protocols, frameworks for communication.
+
+Mainly:
+
+RPC and REST
+
+HTTP1.1 (json) and HTTP2/QUIC/3 (binary+compression+more)
+
+Deliberate the best one under those constraints. From all I've read until now, I'm choosing gRPC, mainly over GraphQL.  +
+From what I'm seeing, GraphQL and gRPC are opposites when compared on one of my favorites software development philosophies to follow: smart data structures for simple code over dumb data structures and complex code.  +
+GraphQL is the dumb data structure for complex code, and gRPC is the smart data structure for simple code. GraphQL is a query language that allows the client to request only the fields it needs, and nothing more. This means that the client has to filter the data it receives, and that the server has to send all the data it has. Blahblahblah. +
+Plus extremely heavy and intertwined configuration... What the fuck, graphql?? +
+What do you mean I gotta rewrite my schema in yaml for you?? AND THEN IN JSON?? IN ADDITION TO YOUR SDL??? Deduplicate even that??
+
+graphql needs a LOT of work to be proper. And then to grow it. It may offer some bandwidth advantages MAYBE. If done right that is. But disadvantages in other ways such as confidentiality? Idk. I think performance issues. Idk.
+
+I want to do benchmarks... At least give numbers and cite them from existing, relevant benchmarks... (You probably won't have time to benchmark yourself. Maybe if the poc is easily interchangeable, but that's very unlikely)
+
+== 4. Communication framework implementation with gRPC
+
+Improve earlier diagrams with gRPC interfaces, RPCs and shared/common API definitions, inter-services interactions; and present the POC.
+
+In this section, we will go over how OIDC can be integrated into Beep's microservices architecture as an authentication system.
+
+Proposition (explanation of the approach, system design, how it fits into chapter I's component and diagrams), and sequence/activity diagram(s). +
+The PoC too.
+
+Link to poc: +
+https://github.com/theotchlx/inter-services-communication +
+Should it be deployed too?? No I don't think that's smart. But readme should be clear and consise steps. + excalidraw small archi diagram in readme.
+
+====
+**WIP and sources**
+
+List of technologies that can be used:
+
+Per directives:
+-> No message queue, CQRS or event-sourcing (so no Kafka/etc.). Sadge.
+
+- REST: http 1.1, slow, heavy
+- gRPC: RPC, common defined API interfaces, interface is sent with message (verify), http2, faster than http. Oh and interface attributes are numbered!! Very important difference. Why is it even like that? Verify. Just against name uniqueness by position? What advantages does this really have to offer?
+- GraphQL: lots of formats possible (including binary formats), but DX is not very scalable I believe + security&cie concern (whole data schema is sent, it's up to the client service to filter what it wants to see)
+- Apache Thrift: 
+- Avro: interface is sent with message, binary format, can be decoded to json natively/easily(verify), natively easily integrated with Kafka
+- more?
+
+Benchmarks, or at least real numbers, then comparisons, +
+Advantages|benefis/disadvantages|drawbacks of each
+
+https://devopedia.org/inter-service-communication-for-microservices
+https://github.com/Netflix/Hystrix fault tolerant capable framework n more
+
+
+Communication. Message-driven architecture. +
+Comm synchrone : http de l'un à l'autre, si l'autre tombe, la comm passe pas. +
+Comm asynchrone : Envoie de mail. On l'envoie. il sera stocké et reçu à un moment dès que possible quand le service de réception/envoi sera good. +
+
+**API composition pattern for microservices :** un service a la connaissance des autres services, connaît les contrats API qui permettent de les faire parler entre eux : fait de la composition. +
+Tu as Cours et Etudiant : le machin map les deux. Et en plus peut enrichir la donnée ! Avec dans quel service elle est passée, etc. I thnik.
+
+
+GraphQL!!! Format binaire underlying est interchangeable !!
+Par contre faut build soit-même les APIs? à voir. Pas grave en vrai. Mais faut les modifier soi-même ??
+
+Si je comprends p'tet, avec graphql tu renvoies masse de données et tu filtres ce groc bloc côté client. Donc faut modif ton code client généré. Et faire bien attention à l'aspect sécurité... ? À tester si c'est bien ça la différence. Noter les différences. Pour plus tard les comparer.
+Ou graphql pour server-client final et grpc pour service - service ?
+When to use gRPC or graphql? Do they even compare? If so, how?
+GraphQL for microservices?
+"[GraphQL] permet notamment aux consommateurs de l’API de demander seulement les champs nécessaires à l’inverse d’une API REST qui expose un schéma prédéfini."
+https://affluences.com/blog/optimiser-architecture-micro-services/
+Ah oui en effet niveau sécurité ça a l'air dur à gérer, si ton service toi exposer tout à tous les autres services et que c'est à eux de choisir... Ou à l'inverse... ??
+J'ai juste l'impression que ça ne suit PAS DU TOUT le principe de "smart data struct for simple code vs dumb data structure for complex code". Donc pour l'instant c'est un non. Le code serait dur à maintenir/scaler, et dur à sécuriser, il me semble. Et c'est aussi deux retours que j'ai lu. Un peu biaisé, mais aussi en partie logique. !! => Answer to "Why [gRPC and] not GraphQL?"
+
+In rust, with grpc? (Contribute to Tonic's doc cuz it's shit, on build.rs setup mostly?? idk. Maybe it's a skill issue)
+grpc cuz kube, google etc? Real motives. Why other are not better choices. USE REAL NUMBERS like estimations to say why they're not better!!! See kafka cours .md obsidian
+
+Quelle architecutre ? Saga pattern ? Kube avec apiserver et etcd centralisé ? Juste etcd centralisé ? Ou tout state et api distribué ? Ou juste API centralisé et state distribué ??
+Comment dissocier le storage ?
+Rajouter des questions sur le TAD ? Lel
+
+
+Poc : 2 services Rust. Chacun une BDD : postgres et l'autre mysql ou autre. Pour montrer que peut séparer ainsi les systèmes (mongodb, sqlite auraient pû être choisis aussi !) scylladb, etc.
+Serveur / user ? Ou un truc du genre. Ou channel / message.
+et un docker compose. deux dockerfile.
+
+Et même poc mais avec autre chose que grpc.
+
+3 dossiers, 1 .git. 1 dossier common / interfaces / whatever avec les .protos ou autre, 1 pr le premier service (cargo new) et un autre pr le second service (cargo new). Ou le faire en Go. Dépend de ce que veut poccer.
+
+Pourquoi Rust? Car <avantages du Rust> + désavantages du rust : plus gros binaires. Mais pas important dans le use case de beep, car (etc C +petit mais on fait pas de l'IOT et etc etc). Voir même bénéfique car bien plus petit que environnement typescript anyways car (etc. nodemodules frameworks node deno pnpm npm etc)
+Y-a-t-l un site qui recense les avantages et désavantages comparés du Rust? ptet! Ou un blog post idk. Le citer, dater sa lecture, et sortir la citation datée !
+
+Faire un joli schéma du poc.
+
+Schémas : UML ? Séquence, composants, useCase (avec le bonhomme) + des plus classiques, architecturaux à la mano non-standards compréhensibles sans app des règles ? Ou c'est kaka ? :X Je crois que c kk..
+
+gRPC/Protobuf / Avro / Apache thrift (RPC), ultra modulaire. Par contre prise en main pas facile... Configs, etc. Mais fine-tunable.
+Avro plus utilisé avec Kafka. Décodable du binaire au json! Tu as deux fichiers envoyés : metadonnées (défini le type, le champ que ça remplit etc). Et l'autre c'est de la donnée pure.
+gRPC l'ordre des champs compte. gRPC envoie aussi le schéma supposément vu que gRPCurl peut curl comme ça. Il me semble.
+gRPC plein de styles d'intéraction, stream bidirectionnel, etc.
+
+Service registries pour qu'ils sachent qu'il y a eu une modif d'api ou quoi.
+
+Sozu vs nginx, vs sozu? benchmarking!! (Dockerfiles) vs rpxy
+
+=== Communication framework proposal
+
+In this section, I will propose a communication framework for Beep's microservices.
+
+In this proof of concept, I implement a communication framework between mock services. I used gRPC as the communication framework.
+
+gRPC is... (what)
+
+I chose gRPC because...
+Some numbers... (why)
+Compared to....
+
+I implemented using Tonic... (how)
+
+https://github.com/hyperium/tonic/blob/master/examples/helloworld-tutorial.md
+https://github.com/theotchlx/inter-services-communication
+
+on vm in proxmox.
+
+SAY DTN AND BP FOR SMTH OTHER THAN HTTP!!! :3333333333
+
+microservice communication best practices
+microservice communication protocols
+microservice communication patterns
+microservice communication pitfalls
+
+TALK ABT asynchronous/synchronous comms. between microservices https://youtu.be/uprdxlQ1U5g?t=589
+How to do async. comms. without kafka/RabbitMQ or the other things forbidden?
+
+https://www.youtube.com/watch?v=16fgzklcF7Y omg nana
+https://www.youtube.com/watch?v=voAyroDb6xk NYAHHAHAHAHAH
+====
+

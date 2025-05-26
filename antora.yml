@@ -1,11 +1,6 @@
 name: beep-adr
 title: Beep Architecture Decision Records
 version: 1
-start_page: inline-text-formatting.adoc
-asciidoc:
-  attributes:
-    source-language: asciidoc@
-    table-caption: false
 nav:
 - modules/ROOT/nav.adoc
 

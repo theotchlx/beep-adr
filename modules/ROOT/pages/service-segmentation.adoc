@@ -1,10 +1,10 @@
-== I. Separating Beep into functional neighborhoods and microservices
+= I. Separating Beep into functional neighborhoods and microservices
 
-=== 3. Separating Beep's user stories into functional neighborhoods, contexts and services
+== 3. Separating Beep's user stories into functional neighborhoods, contexts and services
 
 In this section, we will classify the user stories we identified into functional neighborhoods, and I will give my proposal for breaking down Beep into microservices.
 
-==== Identifying functional neighborhoods and bounded contexts
+=== Identifying functional neighborhoods and bounded contexts
 
 A functional neighborhood is a group of functionalities that are related to a specific business capability of Beep.
 // Is it a bit late to define this term? Or is it good here? Follow where each term is defined. Also add them to the glossary? If we assume the reader doesn't know these terms? See how it's done in academics. Who would read this?
@@ -78,7 +78,7 @@ Also doesn't make sense since databases will be separated into their own service
 Also also, how can we have a notification service... Without a message queuing system?? We'd have to use some other way like... Mongodb... To manage the push notifs state... Ugh. It's just a hacky hack, compared to a message queue. Or we'd assume that every device in the world who runs Beep is always on and has a stable connection to Beep (so that there would be no state to manage).
 OH I KNOW!! We get rid of mobile push notifications (so no need for kafka, or third parties), and for the browser, we use a websocket. I suppose it would work for browser notifications into desktop notifications.. Maybe??
 
-==== Component diagram for Beep's separation into microservices
+=== Component diagram for Beep's separation into microservices
 
 These functional neighborhoods/business capabilities/... can be formally represented using a UML component diagram. Below is the resulting UML component diagram describing my proposal for Beep's separation into microservices.
 
@@ -202,6 +202,9 @@ WIP
 Listen to DIS https://www.youtube.com/watch?v=rv4LlmLmVWk
 
 POUR LA BDD DE MESSAGES : MONGO!!! car relationnel déjà pour le search... Mais aussi pour quand ds le msg y'a une image/un msg vocal, ne pas avoir 90% de champs null dans la postgres pour tous les msgs qui en ont pas... Et si y'a, dans le mongo, mettre l'url du file service/object storage/CDN/FTP...
+
+https://microservices.io/patterns/decomposition/decompose-by-business-capability.html
+https://microservices.io/patterns/data/database-per-service.html
 ====
 
 The purpose of this schema is to capture the requirements of Beep considering its users. This will help us outline business capabilities and user stories into functional neighborhoods, and thus redefine Beep into microservices.

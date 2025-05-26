@@ -1,0 +1,13 @@
+= V. Tracing logs and queries
+
+Easy peasy. Sidecars + OTEL + LGTM + kumas. paf.
+
+handling traces in the new distributed architecture
+traces, logs, queries, metrics, observability, monitoring
+
+snowflake UUIDs (UUIDv7 = snowflakes?) to sort chronologically and etc
+
+how does tracing work microservices
+https://www.youtube.com/watch?v=XYvQHjWJJTE
+
+Tracer les DENYs... Mais aussi les accès.

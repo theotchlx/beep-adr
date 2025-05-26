@@ -1,0 +1,167 @@
+= IV. Authorization system design and implementation
+
+====
+**WIP and sources**
+
+https://www.google.com/search?client=firefox-b-d&q=opa+vs+keycloak+roles
+https://teamraft.com/resources/insights/integrating-keycloak-and-opa-with-confluent/
+https://docs.permify.co/permify-overview/faqs
+https://github.com/keycloak/keycloak/discussions/19554
+https://www.google.com/search?client=firefox-b-d&q=permify+authentication
+https://permify.co/post/auth-vs-authz/
+https://docs.permify.co/setting-up/configuration
+https://permify.co/post/opa-vs-google-zanzibar/
+
+
+Utiliser les concepts de mon talk en cours de Go sur la résistance aux failles !!!!!!!!
+
+Permify, Zanzibar, AuthZed (zanzibar, permify en plus mature). https://authzed.com/, https://zanzibar.academy/, https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/, https://permify.co/post/google-zanzibar-in-a-nutshell/.
+
+Permify/OPA/Kyverno. ATTENTION policies infra/network VS policies applicatives !!! ATTENTION!!! Gérer les policies applicatives (mon user dans mon serveur) fait peut être partie de la logique service!!! Voir D'ABORD des vidéos/sites ou autre qui expliquent comment on gère les permissions d'une application/applicatives dans une architecture microservices.
+
+https://zanzibar.academy/
+Google zanzibar.
+
+ReBAC (relation-based access control)
+
+Permify has a playground: https://play.permify.co/
+
+Keto/permify/opa
+
+list of technologies that can be used:
+
+- OPA
+- Oso
+- Keycloak
+- Permify
+- Ory (keto?)
+- See how GCP (and others) do IAM.
+- more?
+
+Maybe take inspiration from K8s' authorization system, which first goes through an RBAC check, then checks requests validity through admission controllers.
+
+permissions ultra atomiques
+regroupables
+héritables
+attachables à n'importe quelle ressource
+
+équipe contient gens
+équipe à des droits
+les gens ont des droits aussi
+les gens héritent les droits de l'équipe, mais sous forme d'un groupe de permissions qui porte le nom de cette équipe (comme ça paf on retire le gars de l'équipe -> ça màj les droits automatiquement - ou on ajoute un gars à l'équipe et paf il a ses droits màj)
+les gens peuvent override les droits (comment gérer ça ?) -> un "yes" par défaut override ? Un "no" par défaut override ? Ou si la perm / ensemble de perms est placé avant, elles override ? (= rôles discord)
+Ces groupes/ensembles de perms (=rôles beep) seraient donc attachés à une ressource, et héritables, et overridables.
+
+what does google cloud handle authorization, permissions and policies? Not only via IAM, but in itself, in organizations/projects/...
+IAM : __IDENTITY__!!!! and __access/authorization__!!! management!!!
+
+principle of least privilege
+
+Gérer les permissions par groupe de permissions
+
+Les permissions sont le truc le plus atomique, qu'on verra toujours partout ! Il sera handle partout : service(s) pour le gérer ! (et pas ds chaque service sinon kk hihih)
+
+
+Si jamais j'applique une modif des droits/perms alors que je peux pas, ou à l'inverse une modif ne s'applique pas (fait à la main en call api manuel, ou un service qui a foiré) du coup y'a un état transitoire à régler. Donc avoir un controller qui monitor ces états transitoires - ou plutôt monitor un etcd pour savoir si un truc est fait ou pas et s'il y a un truc à faire ? centralisé (comme dans kube), pas distribué. Mal ou bien ?
+Quelle architecture ? Les comparer sur le TAD!!
+
+
+> Note: The deny-all-ingress and allow-all-egress rules are also displayed, but you cannot check or uncheck them as they are implied. These two rules have a lower Priority (higher integers indicate lower priorities) so that the allow ICMP, custom, RDP and SSH rules are considered first.
+"PRIORITY"
+
+Service mesh
+
+https://en.wikipedia.org/wiki/Attribute-based_access_control#API_and_microservices_security
+
+
+Authorization / permissions services must be external from all other services, and they all need to use it. So... Why not integrate it directly inside of K8s ?
+Kubernetes service meshes have proxies. Service mesh proxies that stand in front of services and handle the filtering, other stuff, etc. A lot. And OPA (Open Policy Agent) stands with the proxy, and handles the authorization policies.
+https://www.openpolicyagent.org/docs/latest/
+https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/
+https://sysdig.com/blog/kubernetes-admission-controllers/
+
+Is this how it can be done? Can OPA be configured to handle Beep's authorization service, or do we have to write it ourselves, or is there a protocol or standard to implement, or a config to set and then something (OPA maybe) handles the authorization for us?
+
+FAIRE DU BENCHMARK GRPC (http/2 ?) VS HTTP REST ETC!!!!
+
+https://istio.io/
+
+Istio + OPA
+
+Istio vs linkerd (both cncf btw) kiali: console for istio
+
+Keycloak (and why not authentik)
+
+OpenTelemetry
+https://opentelemetry.io/docs/what-is-opentelemetry/
+Jaeger, OTLP (otel line protocol), Prometheus -> OpenTelemetry collector
+OTEL : très bien pour les traces. Attention Beta pour Rust. Metrics pas mal, logs bof. "Profiles" : juste annoncé.
+"Zero code instrumentations" pour Go, Python, JS, Java ! Signifie + facile pr récup les logs (quasi pas de modifs à faire, se branche au runtime etc. Je peux aussi récupérer des données spécifiques à mon application)
+
+https://prometheus.io/docs/introduction/overview/
+
+Elasticsearch pr données à bcp de cardinalité. Kibana
+Sinon Loki
+(entendu à conf cncf grafana sur OTEL)
+
+https://opentelemetry.io/docs/specs/otlp/
+
+https://cloud.google.com/iam/docs/roles-overview
+
+https://medium.com/@sadoksmine8/understanding-identity-and-access-management-iam-in-gcp-a-detailed-exploration-57030ec37609
+
+permify vs keto
+
+Permify : authorization for microservices. + patterns !!
+https://play.permify.com
+Ory / Krong microservices
+OPA
+Google Zanzibar
+https://www.youtube.com/watch?v=5GG-VUvruzE
+
+Chaos mesh
+
+Oso
+https://www.osohq.com/
+https://github.com/osohq/oso
+Mieux que OPA supposément. Niveau config et architecture du truc. Tester, poccer, prouver, comparer.
+
+oso vs opa
+
+https://github.com/Permify
+Permify !!
+
+https://getsops.io/
+SOPS: encrypts data client-side(?verify), + sealedsecrets encrypts server-side.
+https://getsops.io/docs/
+It's CNCF-sandboxed. But I think it's a bit too much for now, and also this particular software doesn't seem extremely well defined/developed yet? See others.
+But it's not really a current concern in Beep. I think. I dunno!
+https://github.com/getsops/sops
+
+Service mesh: Istio, Linkerd
+Mutual TLS (mTLS) encryption for secure inter-service communication
+
+fully externalized authorization:
+pros:
+- no workload on the targeted service
+- no authori to handle in the service
+cons:
+- Scattered logic : too much logic on the authorization software...
+- Heavy workload on authori software = even more of a SPOF!!
+Duplique de la logique : check d'auth en amont mais svc doit redemander si a le droit au sys d'auth etc etc.... -> Alors qu'on aurait pu juste check l'authorization au moment de la logique ds le service.
+Éviter aussi que le truc d'auth doive faire de la recherche en bdd.. Pas fait pour souvent en plus.. (plutôt fait pour renvoyer oui/non mdr)
+
+On a le mapping des ressources et les auth qui en découle. Pas avoir ça dans les bdd de chaque service (pr préserver leur indépendeance).
+Donc le svc d'auth va requeter SA bdd. et tu as la logique d'auth dans TON service.
+Donc en gros ce qu'il faut (car c'est génial un syst d'authorization externe centralisé) c'est d'avoir la logique d'authorization dans chaque service, mais les règles/mappings entre ressources et les auths qui en découlent DANS le service d'authorization.
+
+Biscuit : système d'authorization décentralisé
+Datalog (basé sur prolog)
+Token/JWT attenuation (When making the JWT, remake it from the request to minimally scope the authorizations). Donc au lieu de taper un système, tout est déjà scopé dans le JWT. la logique d'authorization est dans ton service.
+https://www.biscuitsec.org/
+https://github.com/eclipse-biscuit/biscuit
+Les SDKs/CLI/... créent le token de manière à ce qu'il 
+https://www.youtube.com/watch?v=v7JkOxSG4gI
+https://www.clever-cloud.com/blog/engineering/2021/04/12/introduction-to-biscuit/
+====
+
