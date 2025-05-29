@@ -1,0 +1,28 @@
+= Decision addressing X
+:navtitle: X
+
+This record gathers the technical architecture decision addressing X.
+
+== Problem
+
+== Context
+
+== Requirements
+
+Sizing requirements
+
+== Suggested solutions
+
+=== Solution 1
+
+==== User perspectives
+
+==== Technical perspectives
+
+==== Business perspectives
+
+== Decision
+
+It is decided that
+
+== Sources

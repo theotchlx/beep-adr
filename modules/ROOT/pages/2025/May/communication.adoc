@@ -1,0 +1,96 @@
+= Decision addressing inter-services communication
+:navtitle: Inter-services communication
+
+This record gathers the technical architecture decision addressing inter-services communication mechanisms.
+
+== Problem
+
+Now that we have designed a microservices architecture for Beep, we need to decide how the services will communicate with each other.
+
+== Context
+
+We have designed a microservices architecture for Beep, separating some functionnalities into separate services, based on performance, scalability, maintainability, security.
+
+== Requirements
+
+User perspective requirements:
+
+- Low latency, fast response times
+
+Technical requirements:
+
+- No asynchronous communication between services (no message queue, event-driven architecture, CQRS and other asynchronous communication patterns)
+
+== Suggested solutions
+
+The following solutions were considered:
+
+Design principles:
+
+- REST
+- RPCs
+
+Protocols:
+
+- HTTP/1.1, HTTP/2, QUIC, HTTP/3
+- GraphQL
+- gRPC, Apache Thrift
+
+Data formats:
+
+- Plaintext JSON
+- binary JSON
+- Protobuf, Avro
+
+=== REST with HTTP and plaintext JSON
+
+REST is a common architectural style for designing networked applications. It relies on stateless, client-server communication, where requests are made over HTTP and responses are returned in plaintext JSON format.
+
+==== User perspectives
+
+This format and protocol is directly interpretable visually using a web browser. It is easy to integrate with most technologies, and is widely used and supported.
+
+==== Technical perspectives
+
+HTTP with plaintext JSON may be easy to integrate, but do not fit the performance requirements.
+
+=== gRPC with Protobuf
+
+gRPC is a remote procedure calls framework that I found very easy to use and integrate (as compared to GraphQL). Using protobuf as a binary data format, it offers compression, and high performances.
+
+Binary compression
+
+==== Developer perspectives
+
+I found gRPC frameworks easier to integrate to existing applications, as well as easier to evolve, than GraphQL. The developer and user experience is completely different, as gRPC is a remote procedure calls framework, while GraphQL is a query language for APIs.
+
+Moreover, Protobuf files are easy to define, understand and use.
+
+==== Technical perspectives
+
+Using protobuf as a binary data format, it offers compression, and high performances.
+
+== Decision
+
+It is decided that gRPC with Protobuf will be used as the inter-services communication mechanisms for Beep between internal services.
+
+== Sources
+
+Web articles
+
+- https://devopedia.org/inter-service-communication-for-microservices
+
+Videos
+
+- https://www.youtube.com/watch?v=uprdxlQ1U5g
+- https://www.youtube.com/watch?v=16fgzklcF7Y
+- https://www.youtube.com/watch?v=voAyroDb6xk
+
+PoC sources
+
+- https://github.com/hyperium/tonic/blob/master/examples/helloworld-tutorial.md
+
+Own PoC sources
+
+- https://github.com/theotchlx/inter-services-communication
+- https://github.com/theotchlx/helloworld-grpc-rs

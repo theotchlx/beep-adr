@@ -1,0 +1,197 @@
+= Decision addressing production readiness
+:navtitle: Production system
+
+This record gathers the technical architecture decision addressing production readiness for the deployed system.
+
+== Problem
+
+We need to set up a production-ready system for Beep, ensuring fault tolerance, scalability, and high availability.
+
+== Context
+
+Currently, Beep is deployed using declarative infrastructure as code (IaC) tools, on virtual Kubernetes nodes in a Kubernetes cluster on top of three Proxmox clusters. This system is complex with little added value, and there is no continuity plan. The system needs to be resilient, scalable, and able to handle high traffic loads while ensuring data integrity and security.
+
+== Requirements
+
+Production requirements:
+
+- High availability deployments
+- Fault tolerance
+- Scalability
+- Load balancing
+- Data confidentiality, integrity and availability
+- Secure communications between services and clients
+
+Developer perspective requirements:
+
+- Declarative infrastructure (provision, configuration and deployment) definition
+- Team repartition
+
+Other requirements:
+
+- Cearly defined continuity plans
+
+== Suggested solutions
+
+The following solutions were considered and researched:
+
+Operating systems:
+
+- Arch GNU/Linux
+- Debian GNU/Linux
+- OpenBSD
+- Talos Linux
+
+Container orchestration systems:
+
+- Kubeadm Kubernetes
+- OpenShift Kubernetes
+- RKE2 Kubernetes
+- Talos Kubernetes
+
+Infrastructure management systems:
+
+- Apache Mesos
+- OpenStack
+- Proxmox
+- Talos cluster
+
+Service meshes:
+
+- Istio
+- Linkerd
+
+Databases:
+
+- CockroachDB
+- MinIO
+- MongoDB
+- PostgreSQL
+- SeaweedFS
+- Deuxfleurs's garage
+
+Load balancers:
+
+- MetalLB
+- Nginx
+- Traefik
+
+CNI plugins:
+
+- Calico
+- Cilium
+- Flannel (more basic features, but simpler design and setup)
+- Linkerd-CNI
+
+=== Operating systems, container orchestration and infrastructure management
+
+Talos Linux is a solution for immutable infrastructure, setup with only the necessary components for running Kubernetes, and the Talos cluster itself. It is designed to be secure and efficient, making it suitable for our production environment. All other Linux binaries and configuration files are removed, and the distribution is self-maintained by the Talos team, as it evidently can't be based on any existing distribution.
+
+Existing guides are clear. The system itself is easy to set up and configure properly on an entire physical infrastructure.
+
+I advise that Talos be installed bare metal on the physical servers. If needed, data confidentiality at runtime, and multi-tenancy can then be achieved using Kata Containers or Confidential Containers, with KVM and hardware virtualization enabled.
+
+Mutual TLS (mTLS) for secure communication
+Fault tolerance and circuit breakers
+
+separate etcd cluster? Should it even be etcd?
+
+=== Service meshes
+
+Linkerd follows a simple design, is robust, with a small resources footprint, and focus on ease of use - it is very easy to setup, and the documentation is clear and concise. It provides all the necessary features for a service mesh, including mutual TLS (mTLS) for secure internal communications, as well as fault tolerance mechanisms (such as circuit breakers, retries, timeouts, caching and more), observability (tracing, metrics, logs), traffic management (load balancing, routing...) and has its own Kubernetes CNI plugin. +
+It meets all the requirements previously defined for a production-ready system, and is easy to configure, maintain and manage.
+
+Istio is a solution with a more complex design, with a larger resources footprint, and a more difficult setup for the same end goal. It would be harder to maintain and manage, and would require more resources to run.
+
+=== User perspective
+
+Some rules have to be respected by the production system to ensure data confidentiality, integrity, and availability for users. These rules include:
+
+- Data confidentiality: All users' personal information must be encrypted at least at rest on disks and in transit on internal and external networks.
+- Data integrity: All user data must be protected against unauthorized modifications.
+- Data availability: The system must ensure that user data is always accessible, even in the event of a failure or disaster.
+- GDPR compliance: When a user requests that their data be deleted, this must also include backups of the database.
+
+== Decision
+
+It is decided that the following solutions be used for the production-ready system of Beep:
+
+Operating system:
+
+- Talos Linux
+
+Container orchestration system:
+
+- Talos Kubernetes
+
+Infrastructure management system:
+
+- Talos cluster
+
+Service mesh:
+
+- Linkerd
+
+Team distributions:
+
+- There will be teams dedicated to one or more services, each team working on its service's logic without interfering with others, by working in their own namespaces and code repositories. Each team deploys its own services independently, under their namespace.
+- One or more teams will be dedicated to managing the infrastructure, networking, and service mesh, without interfering with the service logic of other teams. As an example, such team works with the service mesh, with sidecar proxies (for fault tolerance, circuit breaking mechanisms, observability, authorization, etc.) away from individual service logic and deployments. 
+- Teams are pool of contributors that can work on any service, but each team is responsible for the services it manages. A contributor is simply a set of units of effort resources and can work in any team at any time.
+
+Developer perspective decisions:
+
+- Infrastructure provisioning and configuration, as well as service deployment will be defined using code (in case of excessive genericity in templates), or declarative template engines with configuration files - such as Helm, Terraform, Ansible.
+- GitOps pull workflows may be implemented using ArgoCD or FluxCD, to ensure infrastructure versioning and tracking, and automatic reconciliation and updates.
+
+Continuity plans:
+
+- Continuity plans will be defined, with plans for backup procedures, disaster recovery procedures, etc. To ensure service continuity in any situation, during and after any unexpected event.
+
+Other decisions:
+
+- UUIDv7 will be used for all identifiers in the system, to ensure that they are unique, not predictable, and more difficult to guess. This will help prevent unauthorized access to user data.
+- Services and gateways endpoints will be versioned, to ensure that changes to the system do not break existing functionality. This will also allow for easier rollback in case of issues with new versions.
+- There will be no DRM (Digital Rights Management) in the system (including native mobile application), to ensure that users have full control over their data and can use it as they see fit.
+
+== Sources
+
+Documentations
+
+- https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/
+- https://kubernetes.io/docs/concepts/cluster-administration/networking/
+- https://mesos.apache.org/documentation/latest/
+- https://istio.io/latest/docs/tasks/
+- https://opentelemetry.io/docs/what-is-opentelemetry/
+- https://prometheus.io/docs/introduction/overview/
+- https://opentelemetry.io/docs/specs/otlp/
+- https://getsops.io/docs/
+- https://cordova.apache.org/docs/en/latest/guide/overview/index.html
+
+Web articles
+
+- https://mvallim.github.io/kubernetes-under-the-hood/documentation/kube-flannel.html
+- https://medium.com/@ferdinandklr/creating-a-production-ready-self-hosted-kubernetes-cluster-from-scratch-on-a-vps-ipv6-compatible-660aa5018feb
+- https://geek-cookbook.funkypenguin.co.nz/kubernetes/loadbalancer/
+- https://www.baeldung.com/apache-mesos
+- https://www.innoq.com/en/blog/2020/07/happy-without-a-service-mesh/
+- https://blog.valensas.com/we-migrated-to-grafanas-lgtm-stack-here-is-the-story-a8190d3a5a3a
+
+Papers
+
+- https://www.cncf.io/blog/2025/01/29/2024-year-in-review-of-cncf-and-top-30-open-source-project-velocity/
+- https://www.cncf.io/reports/cncf-annual-survey-2023/
+
+Videos
+
+- https://www.youtube.com/watch?v=kwUgrSG_ZKI
+
+Other sources
+
+- https://github.com/jesseduffield/horcrux
+- https://www.uuidgenerator.net/
+- https://agenda.infn.it/event/29701/sessions/21750/attachments/88134/117909/Apache%20Mesos.pdf
+- https://servicemesh.es/
+- https://istio.io/
+- https://github.com/Netflix/Hystrix
+- https://getsops.io/
+- https://cordova.apache.org/

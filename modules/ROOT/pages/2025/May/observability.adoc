@@ -1,0 +1,65 @@
+= Decision addressing observability
+:navtitle: Observability
+
+This record gathers the technical architecture decision addressing observability mechanisms: monitoring, logging, telemetry management.
+
+== Problem
+
+We need to have observability on different resources around Beep, the deployed project, machines, applications, network...
+
+== Context
+
+There are currently a few deployed services (Grafana, Loki, Tempo, Prometheus) for network observability
+
+== Requirements
+
+- Structured, machine-parseable logs
+- Centralized logging service
+- Tracing of requests across services
+- Monitoring of services and resources
+- Telemetry data collection
+- Databases to be incrementally backed up
+
+== Suggested solutions
+
+The following sets of solutions were suggested:
+
+- LGTM stack (Loki, Grafana, Tempo, Mimir)
+- ELK stack (Elasticsearch, Logstash, Kibana)
+- Fluentd
+- Prometheus
+- OpenTelemetry
+- Uptime Kuma
+- Snowflake UUIDs (UUIDv7) for chronological sorting and tracing
+
+The 12factor app methodology recommends using a logging service that is separate from the application (that applications not manage their logs), to allow for better scalability and flexibility. It also recommends using structured logs, which can be easily parsed and analyzed. It is suggested to use a logging router agent, such as Fluentd, to collect and forward logs to a central logging service.
+
+As for tracing, OpenTelemetry is a popular solution that provides a set of APIs and libraries to instrument applications and collect telemetry data. It can be used to trace requests across services, providing insights into the performance and behavior of the system. It is a good idea to trace not only DENY requests, but also any access to the system, in order to have all useful information we wish to have on traces.
+
+== Decision
+
+It is decided that Keycloak will be used as the authentication and identification system for Beep, providing OIDC and OAuth2 authentication, user account association, and SSO capabilities with Polytech's LDAP and Google accounts.
+
+Application logs should follow a common format, in JSON, designed to be parsed by software, not directly human readable.
+
+Database backups should be incremental, most importantly for the first few days, a week, and a month. It is most probable that the database of logs, traces and telemetry data will be the required only the first few days after an incident, so it is not required to keep full details backups for very long periods of time.
+
+== Sources
+
+Documentations
+
+- https://opentelemetry.io/docs/what-is-opentelemetry/
+- https://prometheus.io/docs/introduction/overview/
+- https://opentelemetry.io/docs/specs/otlp/
+
+Web articles
+
+- https://www.fluentd.org/blog/unified-logging-layer
+
+Videos
+
+- https://www.youtube.com/watch?v=XYvQHjWJJTE
+
+Other sources
+
+- https://12factor.net/logs

@@ -1,6 +1,5 @@
 name: beep-adr
-title: Beep Architecture Decision Records
+title: Architecture Decision Records
 version: 1
 nav:
 - modules/ROOT/nav.adoc
-

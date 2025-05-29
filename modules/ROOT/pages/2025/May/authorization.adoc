@@ -1,0 +1,127 @@
+= Decision addressing authorization
+:navtitle: Authorization
+
+This record gathers the technical architecture decision addressing authorization mechanisms.
+
+== Problem
+
+We need to extract authorization policies to authorize user requests between the new microservices. Based on existing implementation (GCP's IAM, Google Zanzibar, etc), we need to explore solutions and find a good fit.
+
+== Context
+
+There is currently a native authorization system in place in Beep, developed by the project contributors.
+
+Permissions should be one of the most atomic, shareable object between services. They appear everywhere, are combined, used in conditionals, are are used as inputs to predefined authorization policies.
+
+Cloud providers and large organizations own scalable implementations of authorization platforms. We wish to explore the concepts, patterns, as many solutions as possible - and solutions similar to those implemented by existing bodies whose architecture are distributed and handle large amounts of queries and applied authorization policies.
+
+== Requirements
+
+User perspective requirements:
+
+- User experience of roles and permissions is left unchanged.
+
+Developer perspective requirements:
+
+- Have an easy developer experience (no complex abstract own-implemented language)
+- Easy to evolve and grow with time
+- Easy to deploy
+
+Technical requirements:
+
+- An external service maps Beep resources (such as servers, users, members...) and actions to permissions and roles.
+- Fast, scalable, little overhead in resources and time.
+- Avoid SPOFs (Single Point of Failure)
+- Provide at least RBAC, ReBAC, ABAC features.
+
+== Suggested solutions
+
+The following specific solutions were considered:
+
+- AuthZed
+- Biscuit with an appropriate Datalog authorizer
+- Google Zanzibar
+- Keycloak
+- OPA
+- Ory (Keto)
+- Oso
+- Permify
+
+=== Keycloak
+
+Keycloak has built-in authorization features. It supports ABAC, RBAC and other fine-grained policies.
+
+==== Technical perspectives
+
+Keycloak can be connected to a persistent database, to store user data and information, as well as settings. Keycloak can then be queried by other services to verify user tokens and retrieve user information.
+
+Keycloak is a complex solution, inneficient in resource usage and hardly scalable, but it is provides a large set of features once properly set up and deployed.
+
+It most often constitutes a probable SPOF (Single Point of Failure) in architecture designs, as it is a single service that handles authentication and identification for all users.
+
+Keycloak's authorization features are not as mature as its authentication features, and it is not the primary use case of the software. It is also not designed to be used as a general-purpose authorization service.
+
+=== Permify
+
+Loosely based on Google's Zanzibar, Permify fits our use case and all requirements defined earlier. The Permify playground was used to demonstrate Beep: https://play.permify.com
+
+The setup/deployment, config, authorization policy definition and overall developer experience was found to be a better fit than OPA.
+
+=== AuthZed
+
+AuthZed was found to be a more mature form of Permify, when comparing open source implementations of Google Zanzibar. The setup and deployment is not more difficult - but the solution is overall more complete, more performant (including the database used itself), has more features and is a closer implementation of Google Zanzibar, which makes it extremely scalable.
+
+The developer experience is as good.
+
+=== OPA
+
+Compared to solutions such as Permify and Authzed, OPA is different, not based on the same principles - but it is also less scoped to our use case, and I found its language and setup more difficult to get a hang on. The developer experience was found to be less than ideal, so it did not fit the requirements.
+
+OPA's authorization policies definition is too generic, almost like code, but in (its own) templating language.
+
+== Decision
+
+It is decided that AuthZEd will be used as the authorization solution for Beep. It fits all requirements, and fulfills all use cases.
+
+== Sources
+
+Documentations
+
+- https://docs.permify.co/permify-overview/faqs
+- https://docs.permify.co/setting-up/configuration
+- https://www.openpolicyagent.org/docs/latest/
+- https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/
+- https://cloud.google.com/iam/docs/roles-overview
+
+Web articles
+
+- https://teamraft.com/resources/insights/integrating-keycloak-and-opa-with-confluent/
+- https://permify.co/post/opa-vs-google-zanzibar/
+- https://permify.co/post/auth-vs-authz/
+- https://www.clever-cloud.com/blog/engineering/2021/04/12/introduction-to-biscuit/
+- https://permify.co/post/google-zanzibar-in-a-nutshell/
+- https://en.wikipedia.org/wiki/Attribute-based_access_control#API_and_microservices_security
+- https://sysdig.com/blog/kubernetes-admission-controllers/
+- https://medium.com/@sadoksmine8/understanding-identity-and-access-management-iam-in-gcp-a-detailed-exploration-57030ec37609
+
+Papers
+
+- https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/
+
+Videos
+
+- https://www.youtube.com/watch?v=v7JkOxSG4gI
+- https://www.youtube.com/watch?v=5GG-VUvruzE
+
+Other sources
+
+- https://www.biscuitsec.org/
+- https://github.com/eclipse-biscuit/biscuit
+- https://github.com/keycloak/keycloak/discussions/19554
+- https://authzed.com/
+- https://zanzibar.academy/
+- https://play.permify.co/
+- https://github.com/Permify
+- https://www.osohq.com/
+- https://github.com/osohq/oso
+- https://github.com/getsops/sops

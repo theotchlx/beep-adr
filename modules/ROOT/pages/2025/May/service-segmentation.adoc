@@ -1,0 +1,136 @@
+= Decision addressing separation into microservices
+:navtitle: Microservices
+
+This record gathers the technical architecture decision addressing the separation of Beep into microservices.
+
+== Problem
+
+We need to separate Beep into microservices, in order to improve the maintainability and scalability of specific components of the application, and for a more flexible development and deployment process.
+
+The hardest challenge will be to make this design future-proof, so that the application can be easily extended with new features and services, without having to redesign the whole architecture.
+
+== Context
+
+Currently, Beep is a monolithic application, with all of its components tightly coupled together. This makes it difficult to maintain, scale, and deploy specific features independently. The goal is to break down the application into smaller, independent services that can be developed, deployed, and scaled independently.
+
+However, a microservices architecture is complex to properly design and implement. It requires careful consideration of the separation of concerns, the communication between services, and the management of data consistency across services. It also requires a clear understanding of the business capabilities and user stories that the application needs to support.
+
+The most important thing to keep in mind being why we're doing it, what's the end goal of the separation of the monolith into microservices, as defined earlier.
+
+== Cutting a monolith into microservices
+
+We already have an existing monolithic application. We have started by identifying the business domains of Beep - then these domains can be further cut into technical domains (each being a deployed service) based on technical concerns.
+
+As such, one business domain answers a specific business capability, separate from the others, and is made up of one or more technical components that can be (if a technical concern) deployed as a separate microservices.
+
+The following business domains have been identified in Beep:
+
+- User
+- Community
+- Communication
+
+The main principle is that between each business domain, there is a clear separation of concerns, and each domain can be developed, deployed, and scaled independently. Each business domain can be further cut into technical domains, which are the actual microservices that will be deployed.
+
+In practice, that means that each business domain can be referenced in any other using only one ID, which is the ID of the business domain's aggregate root. For example, the user management domain can be referenced in the community domain using only the user ID, without needing to know anything about the user management domain's implementation details, or storing any data about the user.
+
+That means that each domain should be able to handle cases where the referenced ID does not exist. It also means that deleting an aggregate root ID (such as a user's ID) deletes all data related to that aggregate.
+
+Each business domain can be made up of multiple technical domains and services; multiple methods exist to make them work concurrently. Patterns such as API gateways between business domains, and many patterns around microservices, synchronous, asynchronous, monolithic or microlithic architectures can be implemented inside each business domain. This may not even be necessary, business domains may be implemented as monoliths, if there are no technical concerns to this. +
+One business domain could for example live in its own namespace, with all its technical components; with, if needed, a gateway between its services and other business domains.
+
+Such technical domains are real-time video/audio WebRTC streaming, messaging, user management, community management, and notifications handling.
+
+These technical domains form microservices, and can be implemented separately (such as by different teams or contributors), use different technologies (such as database technologies), and be deployed and scaled independently.
+
+== Decision
+
+It is decided that Beep be separated into the following business domains:
+
+- Users
+  - Handles user information and authentication.
+- Communities
+  - Handles servers, members, and channel lifecycle management.
+- Communication
+  - Handles messaging, file sharing, search, real-time video/audio WebRTC streaming, and notifications.
+
+The following technical domains are proposed to be deployed as separate services:
+
+In the Users business domain:
+
+- Users
+  - Relies on Keycloak (the Authentication service) as its database.
+  - Handles user information, native registration.
+  - Handles user relationships (such as friends).
+
+- Authentication (Keycloak)
+  - Handles user authentication and identification.
+  - Uses PostgreSQL as its database.
+  - Is the API that enforces user authentication and identification across all other business domains.
+
+In the Communities business domain:
+
+- Communities
+  - Manages servers, members and channels lifecycle.
+
+- Authorization
+  - Its components are part of every technical domain, and it is used to manage user permissions and roles across all business domains.
+  - However its main component and database lives closer to the Communities business domain, as it is the one that manages permissions and roles inside Communities.
+
+In the Communication business domain:
+
+- Messaging
+  - Manages messages lifecycle
+  - Makes use of a MongoDB database for storing messages.
+  - Implements search features on messages and files.
+  - Handles push notifications to devices. This may be implemented as a separate service, if the need for scaling, or technical concerns of asynchronicity arise.
+
+- Files
+  - Authenticated CDN and file storage, with a public part if the file is public.
+
+- Calls
+  - Implements real-time video/audio WebRTC streaming
+
+== Sources
+
+Web articles
+
+- https://medium.com/@mike_7149/context-mapping-4b4909cf195a
+- https://medium.com/@vladikk.com/bounded-contexts-are-not-microservices-ead44b8d6e35
+- https://www.uml-diagrams.org/component-diagrams.html
+- https://developer.ibm.com/articles/the-component-diagram/
+- https://trino.io/blog/2020/06/16/presto-summit-zuora.html
+- https://moduscreate.com/blog/microservices-databases-migrations/
+- https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
+- https://stackoverflow.com/questions/60457740/rest-endpoint-for-complex-actions
+- https://stackoverflow.com/a/60463179
+- https://dzone.com/articles/10-microservices-anti-patterns-you-need-to-avoid
+- https://microservices.io/patterns/decomposition/decompose-by-business-capability.html
+- https://microservices.io/patterns/data/database-per-service.html
+- https://microservices.io/refactoring/
+- https://microservices.io/patterns/
+- https://microservices.io/patterns/microservices.html
+- https://microservices.io/patterns/decomposition/decompose-by-business-capability.html
+- https://microservices.io/patterns/data/saga.html
+- https://microservices.io/post/refactoring/2019/10/09/refactoring-to-microservices.html
+- https://microservices.io/post/architecture/2024/08/27/architecting-microservices-for-fast-flow.html
+- https://microservices.io/articles/glossary#dora-metrics
+- https://microservices.io/patterns/data/database-per-service.html
+- https://martinfowler.com/bliki/BoundedContext.html
+- https://martinfowler.com/articles/break-monolith-into-microservices.html
+- https://leofvo.me/articles/microservices-for-the-win
+- https://www.geeksforgeeks.org/how-discord-scaled-to-15-million-users-on-one-server/
+- https://samarthasthan.com/posts/building-a-scalable-e-commerce-empire-a-micro-services-system-design-approach/
+- https://freedium.cfd/https://medium.com/@samarthasthan/from-zero-to-millions-crafting-a-scalable-discord-with-micro-services-0e55e65f2a16
+- https://stackoverflow.com/questions/60071074/microservices-dependencies-in-uml-diagrams
+- https://www.uml-diagrams.org/component-diagrams.html
+- https://developer.ibm.com/articles/the-component-diagram/
+- https://www.edrawsoft.com/fr/article/microservices-architecture-diagram.html
+
+Videos
+
+- https://www.youtube.com/watch?v=rv4LlmLmVWk
+- https://www.youtube.com/watch?v=Vz2DHAHn7OU
+
+Other sources
+
+- https://12factor.net/

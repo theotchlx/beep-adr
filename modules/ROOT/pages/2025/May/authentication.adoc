@@ -1,0 +1,82 @@
+= Decision addressing authentication and identification
+:navtitle: Authentication
+
+This record gathers the technical architecture decision addressing authentication mechanisms.
+
+== Problem
+
+We need to add OIDC authentication and identification to Beep, allowing users to authenticate, register and link their Beep account with their Polytech and Google accounts.
+
+== Context
+
+There is currently a native authentication system in place in Beep, developed by the project contributors.
+
+== Requirements
+
+User perspective requirements:
+
+- User can connect to Beep via their Polytech account.
+- User can connect to Beep via their Google account.
+- User can associate their Google and Beep accounts.
+- Single-sign on (SSO), allowing users to connect via their Polytech account or Google account.
+
+Technical requirements:
+
+- OAuth2 and OpenID Connect (OIDC) authentication and identification
+- Single Sign-On (SSO) with Polytech (via LDAP) and Google accounts (via OIDC)
+- User account association between Beep and Google accounts
+
+== Suggested solutions
+
+The only suggested solution was to use Keycloak.
+
+=== Keycloak
+
+Keycloak provides all of the required features on the user perspective as well as the technical perspective.
+
+[Keycloak](https://www.keycloak.org/) is an [open source](https://github.com/keycloak/keycloak) identity and access management platform. It also provides Role-Based Access Control (RBAC) and fine-grained authorization features. It is most often used by applications to delegate user management and authentication.
+
+It is currently one of the most popular open source identity providers, and is used by many software projects, including in microservices designs. However, it is complex, the documentation is not clear, the client libraries are not well documented, and the service itself is very resource-intensive.
+
+==== User perspectives
+
+Keycloak provides a slightly customizable web user interface for authentication and registration. An administration console is available to configure more specific authentication and OIDC settings.
+
+==== Technical perspectives
+
+Keycloak can be connected to a persistent database, to store user data and information, as well as settings. Keycloak can then be queried by other services to verify user tokens and retrieve user information.
+
+Keycloak is a complex solution, inneficient in resource usage and hardly scalable, but it is provides a large set of features once properly set up and deployed.
+
+It most often constitutes a probable SPOF (Single Point of Failure) in architecture designs, as it is a single service that handles authentication and identification for all users.
+
+== Decision
+
+It is decided that Keycloak will be used as the authentication and identification system for Beep, providing OIDC and OAuth2 authentication, user account association, and SSO capabilities with Polytech's LDAP and Google accounts.
+
+== Sources
+
+Documentations
+
+- https://developers.google.com/identity/protocols/oauth2
+- https://discord.com/developers/docs/topics/oauth2
+- https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc
+- https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc#learn-more-about-oauth-and-oidc
+
+Web articles
+
+- https://medium.com/@a.zagarella/microservices-architecture-a-real-business-world-scenario-c77c31a957fb
+- https://adil.medium.com/multi-container-patterns-in-kubernetes-adapter-ambassador-sidecar-40bddbe7c468
+- https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/
+- https://medium.com/microsoftazure/certificate-pinning-for-mtls-authentication-at-the-istio-ingress-gateway-978ed31699ab
+- https://samarthasthan.com/posts/building-a-scalable-e-commerce-empire-a-micro-services-system-design-approach/
+- https://www.geeksforgeeks.org/how-discord-scaled-to-15-million-users-on-one-server/
+- http://butunclebob.com/ArticleS.UncleBob.PrinciplesOfOod
+- https://permify.co/post/jwt-paseto/
+
+Videos
+
+- https://www.youtube.com/watch?v=ZV5yTm4pT8g
+- https://www.youtube.com/watch?v=t18YB3xDfXI
+- https://www.youtube.com/watch?v=uWmZZyaHFEY
+- https://www.youtube.com/watch?v=vJweuU6Qrgo
