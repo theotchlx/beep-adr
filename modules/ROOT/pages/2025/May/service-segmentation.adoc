@@ -46,49 +46,49 @@ These technical domains form microservices, and can be implemented separately (s
 
 It is decided that Beep be separated into the following business domains:
 
-- Users
-  - Handles user information and authentication.
-- Communities
-  - Handles servers, members, and channel lifecycle management.
-- Communication
-  - Handles messaging, file sharing, search, real-time video/audio WebRTC streaming, and notifications.
+* Users
+** Handles user information and authentication.
+* Communities
+** Handles servers, members, and channel lifecycle management.
+* Communication
+** Handles messaging, file sharing, search, real-time video/audio WebRTC streaming, and notifications.
 
 The following technical domains are proposed to be deployed as separate services:
 
 In the Users business domain:
 
-- Users
-  - Relies on Keycloak (the Authentication service) as its database.
-  - Handles user information, native registration.
-  - Handles user relationships (such as friends).
+* Users
+** Relies on Keycloak (the Authentication service) as its database.
+** Handles user information, native registration.
+** Handles user relationships (such as friends).
 
-- Authentication (Keycloak)
-  - Handles user authentication and identification.
-  - Uses PostgreSQL as its database.
-  - Is the API that enforces user authentication and identification across all other business domains.
+* Authentication (Keycloak)
+** Handles user authentication and identification.
+** Uses PostgreSQL as its database.
+** Is the API that enforces user authentication and identification across all other business domains.
 
 In the Communities business domain:
 
-- Communities
-  - Manages servers, members and channels lifecycle.
+* Communities
+** Manages servers, members and channels lifecycle.
 
-- Authorization
-  - Its components are part of every technical domain, and it is used to manage user permissions and roles across all business domains.
-  - However its main component and database lives closer to the Communities business domain, as it is the one that manages permissions and roles inside Communities.
+* Authorization
+** Its components are part of every technical domain, and it is used to manage user permissions and roles across all business domains.
+** However its main component and database lives closer to the Communities business domain, as it is the one that manages permissions and roles inside Communities.
 
 In the Communication business domain:
 
-- Messaging
-  - Manages messages lifecycle
-  - Makes use of a MongoDB database for storing messages.
-  - Implements search features on messages and files.
-  - Handles push notifications to devices. This may be implemented as a separate service, if the need for scaling, or technical concerns of asynchronicity arise.
+* Messaging
+** Manages messages lifecycle
+** Makes use of a MongoDB database for storing messages.
+** Implements search features on messages and files.
+** Handles push notifications to devices. This may be implemented as a separate service, if the need for scaling, or technical concerns of asynchronicity arise.
 
-- Files
-  - Authenticated CDN and file storage, with a public part if the file is public.
+* Files
+** Authenticated CDN and file storage, with a public part if the file is public.
 
-- Calls
-  - Implements real-time video/audio WebRTC streaming
+* Calls
+** Implements real-time video/audio WebRTC streaming
 
 == Sources
 

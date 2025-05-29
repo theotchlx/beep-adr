@@ -1,12 +1,9 @@
 * xref:index.adoc[]
 
 * May 2025
-** xref:2025/May/communication.adoc[]
 ** xref:2025/May/authentication.adoc[]
 ** xref:2025/May/authorization.adoc[]
-** xref:2025/May/logging.adoc[]
+** xref:2025/May/communication.adoc[]
+** xref:2025/May/observability.adoc[]
 ** xref:2025/May/production.adoc[]
-** xref:2025/May/service-meshes.adoc[]
 ** xref:2025/May/service-segmentation.adoc[]
-** xref:2025/May/telemetry.adoc[]
-** xref:2025/May/use-cases.adoc[]
